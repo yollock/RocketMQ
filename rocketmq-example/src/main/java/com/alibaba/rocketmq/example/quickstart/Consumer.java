@@ -36,7 +36,6 @@ public class Consumer {
 
         consumer.setNamesrvAddr("localhost:9876"); // todo 待删除
 
-
         /**
          * 设置Consumer第一次启动是从队列头部开始消费还是队列尾部开始消费<br>
          * 如果非第一次启动，那么按照上次消费的位置继续消费
