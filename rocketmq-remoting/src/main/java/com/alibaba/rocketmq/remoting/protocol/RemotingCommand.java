@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2010-2013 Alibaba Group Holding Limited
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
 
 /**
  * Remoting模块中，服务器与客户端通过传递RemotingCommand来交互
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-13
  */
@@ -78,9 +78,7 @@ public class RemotingCommand {
 
 
     public static RemotingCommand createResponseCommand(Class<? extends CommandCustomHeader> classHeader) {
-        RemotingCommand cmd =
-                createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "not set any response code",
-                    classHeader);
+        RemotingCommand cmd = createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "not set any response code", classHeader);
 
         return cmd;
     }
@@ -94,8 +92,7 @@ public class RemotingCommand {
     /**
      * 只有通信层内部会调用，业务不会调用
      */
-    public static RemotingCommand createResponseCommand(int code, String remark,
-            Class<? extends CommandCustomHeader> classHeader) {
+    public static RemotingCommand createResponseCommand(int code, String remark, Class<? extends CommandCustomHeader> classHeader) {
         RemotingCommand cmd = new RemotingCommand();
         cmd.markResponseType();
         cmd.setCode(code);
@@ -106,11 +103,9 @@ public class RemotingCommand {
             try {
                 CommandCustomHeader objectHeader = classHeader.newInstance();
                 cmd.customHeader = objectHeader;
-            }
-            catch (InstantiationException e) {
+            } catch (InstantiationException e) {
                 return null;
-            }
-            catch (IllegalAccessException e) {
+            } catch (IllegalAccessException e) {
                 return null;
             }
         }
@@ -122,8 +117,7 @@ public class RemotingCommand {
     private static void setCmdVersion(RemotingCommand cmd) {
         if (ConfigVersion >= 0) {
             cmd.setVersion(ConfigVersion);
-        }
-        else {
+        } else {
             String v = System.getProperty(RemotingVersionKey);
             if (v != null) {
                 int value = Integer.parseInt(v);
@@ -149,10 +143,8 @@ public class RemotingCommand {
                         try {
                             field.setAccessible(true);
                             value = field.get(this.customHeader);
-                        }
-                        catch (IllegalArgumentException e) {
-                        }
-                        catch (IllegalAccessException e) {
+                        } catch (IllegalArgumentException e) {
+                        } catch (IllegalAccessException e) {
                         }
 
                         if (value != null) {
@@ -189,17 +181,14 @@ public class RemotingCommand {
     private static final String DoubleName2 = double.class.getCanonicalName();//
 
 
-    public CommandCustomHeader decodeCommandCustomHeader(Class<? extends CommandCustomHeader> classHeader)
-            throws RemotingCommandException {
+    public CommandCustomHeader decodeCommandCustomHeader(Class<? extends CommandCustomHeader> classHeader) throws RemotingCommandException {
         if (this.extFields != null) {
             CommandCustomHeader objectHeader;
             try {
                 objectHeader = classHeader.newInstance();
-            }
-            catch (InstantiationException e) {
+            } catch (InstantiationException e) {
                 return null;
-            }
-            catch (IllegalAccessException e) {
+            } catch (IllegalAccessException e) {
                 return null;
             }
 
@@ -214,8 +203,7 @@ public class RemotingCommand {
                             if (null == value) {
                                 Annotation annotation = field.getAnnotation(CFNotNull.class);
                                 if (annotation != null) {
-                                    throw new RemotingCommandException("the custom field <" + fieldName
-                                            + "> is null");
+                                    throw new RemotingCommandException("the custom field <" + fieldName + "> is null");
                                 }
 
                                 continue;
@@ -227,28 +215,21 @@ public class RemotingCommand {
 
                             if (type.equals(StringName)) {
                                 valueParsed = value;
-                            }
-                            else if (type.equals(IntegerName1) || type.equals(IntegerName2)) {
+                            } else if (type.equals(IntegerName1) || type.equals(IntegerName2)) {
                                 valueParsed = Integer.parseInt(value);
-                            }
-                            else if (type.equals(LongName1) || type.equals(LongName2)) {
+                            } else if (type.equals(LongName1) || type.equals(LongName2)) {
                                 valueParsed = Long.parseLong(value);
-                            }
-                            else if (type.equals(BooleanName1) || type.equals(BooleanName2)) {
+                            } else if (type.equals(BooleanName1) || type.equals(BooleanName2)) {
                                 valueParsed = Boolean.parseBoolean(value);
-                            }
-                            else if (type.equals(DoubleName1) || type.equals(DoubleName2)) {
+                            } else if (type.equals(DoubleName1) || type.equals(DoubleName2)) {
                                 valueParsed = Double.parseDouble(value);
-                            }
-                            else {
-                                throw new RemotingCommandException("the custom field <" + fieldName
-                                        + "> type is not supported");
+                            } else {
+                                throw new RemotingCommandException("the custom field <" + fieldName + "> type is not supported");
                             }
 
                             field.set(objectHeader, valueParsed);
 
-                        }
-                        catch (Throwable e) {
+                        } catch (Throwable e) {
                         }
                     }
                 }
@@ -498,9 +479,7 @@ public class RemotingCommand {
 
     @Override
     public String toString() {
-        return "RemotingCommand [code=" + code + ", language=" + language + ", version=" + version
-                + ", opaque=" + opaque + ", flag(B)=" + Integer.toBinaryString(flag) + ", remark=" + remark
-                + ", extFields=" + extFields + "]";
+        return "RemotingCommand [code=" + code + ", language=" + language + ", version=" + version + ", opaque=" + opaque + ", flag(B)=" + Integer.toBinaryString(flag) + ", remark=" + remark + ", extFields=" + extFields + "]";
     }
 
 }
