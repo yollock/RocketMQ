@@ -785,7 +785,7 @@ public class CommitLog {
             // Normal shutdown, to ensure that all the flush before exit
             boolean result = false;
             for (int i = 0; i < RetryTimesOver && !result; i++) {
-                result = CommitLog.this.mapedFileQueue.commit(0);
+                result = CommitLog.this.mapedFileQueue.commit(0); // 执行刷盘
                 CommitLog.log.info(this.getServiceName() + " service shutdown, retry " + (i + 1) + " times "
                         + (result ? "OK" : "Not OK"));
             }

@@ -280,6 +280,16 @@ public class BrokerStartup {
     }
 
 
+//    private static void parsePropertie2SystemEnv(Properties properties) {
+//        if (properties == null) {
+//            return;
+//        }
+//        String rmqAddressServerDomain = properties.getProperty("rmqAddressServerDomain", MixAll.DEFAULT_NAMESRV_ADDR_LOOKUP);
+//        String rmqAddressServerSubGroup = properties.getProperty("rmqAddressServerSubGroup", "nsaddr");
+//        System.setProperty("rocketmq.namesrv.domain", rmqAddressServerDomain);
+//        System.setProperty("rocketmq.namesrv.domain.subgroup", rmqAddressServerSubGroup);
+//    }
+
 
 
     public static BrokerController start(BrokerController controller) {

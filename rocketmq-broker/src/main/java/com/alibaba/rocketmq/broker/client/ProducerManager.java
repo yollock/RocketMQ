@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2010-2013 Alibaba Group Holding Limited
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,8 +44,7 @@ public class ProducerManager {
     private static final long LockTimeoutMillis = 3000;
     private static final long ChannelExpiredTimeout = 1000 * 120;
     private final Lock groupChannelLock = new ReentrantLock();
-    private final HashMap<String /* group name */, HashMap<Channel, ClientChannelInfo>> groupChannelTable =
-            new HashMap<String, HashMap<Channel, ClientChannelInfo>>();
+    private final HashMap<String /* group name */, HashMap<Channel, ClientChannelInfo>> groupChannelTable = new HashMap<String, HashMap<Channel, ClientChannelInfo>>();
 
 
     public ProducerManager() {
@@ -53,10 +52,9 @@ public class ProducerManager {
 
 
     public HashMap<String, HashMap<Channel, ClientChannelInfo>> getGroupChannelTable() {
-        HashMap<String /* group name */, HashMap<Channel, ClientChannelInfo>> newGroupChannelTable =
-                new HashMap<String, HashMap<Channel, ClientChannelInfo>>();
+        HashMap<String /* group name */, HashMap<Channel, ClientChannelInfo>> newGroupChannelTable = new HashMap<String, HashMap<Channel, ClientChannelInfo>>();
         try {
-            if (this.groupChannelLock.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)){
+            if (this.groupChannelLock.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)) {
                 try {
                     newGroupChannelTable.putAll(groupChannelTable);
                 } finally {
@@ -64,7 +62,7 @@ public class ProducerManager {
                 }
             }
         } catch (InterruptedException e) {
-           log.error("",e);
+            log.error("", e);
         }
         return newGroupChannelTable;
     }
@@ -74,8 +72,7 @@ public class ProducerManager {
         try {
             if (this.groupChannelLock.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)) {
                 try {
-                    for (final Map.Entry<String, HashMap<Channel, ClientChannelInfo>> entry : this.groupChannelTable
-                        .entrySet()) {
+                    for (final Map.Entry<String, HashMap<Channel, ClientChannelInfo>> entry : this.groupChannelTable.entrySet()) {
                         final String group = entry.getKey();
                         final HashMap<Channel, ClientChannelInfo> chlMap = entry.getValue();
 
@@ -88,23 +85,18 @@ public class ProducerManager {
                             long diff = System.currentTimeMillis() - info.getLastUpdateTimestamp();
                             if (diff > ChannelExpiredTimeout) {
                                 it.remove();
-                                log.warn(
-                                    "SCAN: remove expired channel[{}] from ProducerManager groupChannelTable, producer group name: {}",
-                                    RemotingHelper.parseChannelRemoteAddr(info.getChannel()), group);
+                                log.warn("SCAN: remove expired channel[{}] from ProducerManager groupChannelTable, producer group name: {}", RemotingHelper.parseChannelRemoteAddr(info.getChannel()), group);
                                 RemotingUtil.closeChannel(info.getChannel());
                             }
                         }
                     }
-                }
-                finally {
+                } finally {
                     this.groupChannelLock.unlock();
                 }
-            }
-            else {
+            } else {
                 log.warn("ProducerManager scanNotActiveChannel lock timeout");
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             log.error("", e);
         }
     }
@@ -115,30 +107,22 @@ public class ProducerManager {
             try {
                 if (this.groupChannelLock.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)) {
                     try {
-                        for (final Map.Entry<String, HashMap<Channel, ClientChannelInfo>> entry : this.groupChannelTable
-                            .entrySet()) {
+                        for (final Map.Entry<String, HashMap<Channel, ClientChannelInfo>> entry : this.groupChannelTable.entrySet()) {
                             final String group = entry.getKey();
-                            final HashMap<Channel, ClientChannelInfo> clientChannelInfoTable =
-                                    entry.getValue();
-                            final ClientChannelInfo clientChannelInfo =
-                                    clientChannelInfoTable.remove(channel);
+                            final HashMap<Channel, ClientChannelInfo> clientChannelInfoTable = entry.getValue();
+                            final ClientChannelInfo clientChannelInfo = clientChannelInfoTable.remove(channel);
                             if (clientChannelInfo != null) {
-                                log.info(
-                                        "NETTY EVENT: remove channel[{}][{}] from ProducerManager groupChannelTable, producer group: {}",
-                                        clientChannelInfo.toString(), remoteAddr, group);
+                                log.info("NETTY EVENT: remove channel[{}][{}] from ProducerManager groupChannelTable, producer group: {}", clientChannelInfo.toString(), remoteAddr, group);
                             }
 
                         }
-                    }
-                    finally {
+                    } finally {
                         this.groupChannelLock.unlock();
                     }
-                }
-                else {
+                } else {
                     log.warn("ProducerManager doChannelCloseEvent lock timeout");
                 }
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 log.error("", e);
             }
         }
@@ -160,23 +144,19 @@ public class ProducerManager {
                     clientChannelInfoFound = channelTable.get(clientChannelInfo.getChannel());
                     if (null == clientChannelInfoFound) {
                         channelTable.put(clientChannelInfo.getChannel(), clientChannelInfo);
-                        log.info("new producer connected, group: {} channel: {}", group,
-                            clientChannelInfo.toString());
+                        log.info("new producer connected, group: {} channel: {}", group, clientChannelInfo.toString());
                     }
-                }
-                finally {
+                } finally {
                     this.groupChannelLock.unlock();
                 }
 
                 if (clientChannelInfoFound != null) {
                     clientChannelInfoFound.setLastUpdateTimestamp(System.currentTimeMillis());
                 }
-            }
-            else {
+            } else {
                 log.warn("ProducerManager registerProducer lock timeout");
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             log.error("", e);
         }
     }
@@ -190,8 +170,7 @@ public class ProducerManager {
                     if (null != channelTable && !channelTable.isEmpty()) {
                         ClientChannelInfo old = channelTable.remove(clientChannelInfo.getChannel());
                         if (old != null) {
-                            log.info("unregister a producer[{}] from groupChannelTable {}", group,
-                                clientChannelInfo.toString());
+                            log.info("unregister a producer[{}] from groupChannelTable {}", group, clientChannelInfo.toString());
                         }
 
                         if (channelTable.isEmpty()) {
@@ -199,16 +178,13 @@ public class ProducerManager {
                             log.info("unregister a producer group[{}] from groupChannelTable", group);
                         }
                     }
-                }
-                finally {
+                } finally {
                     this.groupChannelLock.unlock();
                 }
-            }
-            else {
+            } else {
                 log.warn("ProducerManager unregisterProducer lock timeout");
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             log.error("", e);
         }
     }

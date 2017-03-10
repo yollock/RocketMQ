@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2010-2013 Alibaba Group Holding Limited
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ import com.alibaba.rocketmq.store.config.StorePathConfigHelper;
 
 /**
  * 消息索引服务
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */
@@ -62,8 +62,7 @@ public class IndexService extends ServiceThread {
         this.defaultMessageStore = store;
         this.hashSlotNum = store.getMessageStoreConfig().getMaxHashSlotNum();
         this.indexNum = store.getMessageStoreConfig().getMaxIndexNum();
-        this.storePath =
-                StorePathConfigHelper.getStorePathIndex(store.getMessageStoreConfig().getStorePathRootDir());
+        this.storePath = StorePathConfigHelper.getStorePathIndex(store.getMessageStoreConfig().getStorePathRootDir());
     }
 
 
@@ -79,8 +78,7 @@ public class IndexService extends ServiceThread {
                     f.load();
 
                     if (!lastExitOK) {
-                        if (f.getEndTimestamp() > this.defaultMessageStore.getStoreCheckpoint()
-                            .getIndexMsgTimestamp()) {
+                        if (f.getEndTimestamp() > this.defaultMessageStore.getStoreCheckpoint().getIndexMsgTimestamp()) {
                             f.destroy(0);
                             continue;
                         }
@@ -88,8 +86,7 @@ public class IndexService extends ServiceThread {
 
                     log.info("load index file OK, " + f.getFileName());
                     this.indexFileList.add(f);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     log.error("load file " + file + " error", e);
                     return false;
                 }
@@ -115,11 +112,9 @@ public class IndexService extends ServiceThread {
             if (endPhyOffset < offset) {
                 files = this.indexFileList.toArray();
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("destroy exception", e);
-        }
-        finally {
+        } finally {
             this.readWriteLock.readLock().unlock();
         }
 
@@ -129,8 +124,7 @@ public class IndexService extends ServiceThread {
                 IndexFile f = (IndexFile) files[i];
                 if (f.getEndPhyOffset() < offset) {
                     fileList.add(f);
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -155,11 +149,9 @@ public class IndexService extends ServiceThread {
                         break;
                     }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log.error("deleteExpiredFile has exception.", e);
-            }
-            finally {
+            } finally {
                 this.readWriteLock.writeLock().unlock();
             }
         }
@@ -173,11 +165,9 @@ public class IndexService extends ServiceThread {
                 f.destroy(1000 * 3);
             }
             this.indexFileList.clear();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("destroy exception", e);
-        }
-        finally {
+        } finally {
             this.readWriteLock.readLock().unlock();
         }
     }
@@ -215,11 +205,9 @@ public class IndexService extends ServiceThread {
                     }
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("queryMsg exception", e);
-        }
-        finally {
+        } finally {
             this.readWriteLock.readLock().unlock();
         }
 
@@ -256,8 +244,7 @@ public class IndexService extends ServiceThread {
                 if (req != null) {
                     this.buildIndex(req);
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log.warn(this.getServiceName() + " service has exception. ", e);
             }
         }
@@ -271,7 +258,8 @@ public class IndexService extends ServiceThread {
         IndexFile indexFile = retryGetAndCreateIndexFile();
         if (indexFile != null) {
             long endPhyOffset = indexFile.getEndPhyOffset();
-            MSG_WHILE: for (Object o : req) {
+            MSG_WHILE:
+            for (Object o : req) {
                 DispatchRequest msg = (DispatchRequest) o;
                 String topic = msg.getTopic();
                 String keys = msg.getKeys();
@@ -281,12 +269,12 @@ public class IndexService extends ServiceThread {
 
                 final int tranType = MessageSysFlag.getTransactionValue(msg.getSysFlag());
                 switch (tranType) {
-                case MessageSysFlag.TransactionNotType:
-                case MessageSysFlag.TransactionPreparedType:
-                    break;
-                case MessageSysFlag.TransactionCommitType:
-                case MessageSysFlag.TransactionRollbackType:
-                    continue;
+                    case MessageSysFlag.TransactionNotType:
+                    case MessageSysFlag.TransactionPreparedType:
+                        break;
+                    case MessageSysFlag.TransactionCommitType:
+                    case MessageSysFlag.TransactionRollbackType:
+                        continue;
                 }
 
                 if (keys != null && keys.length() > 0) {
@@ -294,9 +282,7 @@ public class IndexService extends ServiceThread {
                     for (String key : keyset) {
                         // TODO 是否需要TRIM
                         if (key.length() > 0) {
-                            for (boolean ok =
-                                    indexFile.putKey(buildKey(topic, key), msg.getCommitLogOffset(),
-                                        msg.getStoreTimestamp()); !ok;) {
+                            for (boolean ok = indexFile.putKey(buildKey(topic, key), msg.getCommitLogOffset(), msg.getStoreTimestamp()); !ok; ) {
                                 log.warn("index file full, so create another one, " + indexFile.getFileName());
                                 indexFile = retryGetAndCreateIndexFile();
                                 if (null == indexFile) {
@@ -304,9 +290,7 @@ public class IndexService extends ServiceThread {
                                     break MSG_WHILE;
                                 }
 
-                                ok =
-                                        indexFile.putKey(buildKey(topic, key), msg.getCommitLogOffset(),
-                                            msg.getStoreTimestamp());
+                                ok = indexFile.putKey(buildKey(topic, key), msg.getCommitLogOffset(), msg.getStoreTimestamp());
                             }
                         }
                     }
@@ -330,14 +314,12 @@ public class IndexService extends ServiceThread {
         // 如果创建失败，尝试重建3次
         for (int times = 0; null == indexFile && times < 3; times++) {
             indexFile = this.getAndCreateLastIndexFile();
-            if (null != indexFile)
-                break;
+            if (null != indexFile) break;
 
             try {
                 log.error("try to create index file, " + times + " times");
                 Thread.sleep(1000);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -368,8 +350,7 @@ public class IndexService extends ServiceThread {
                 IndexFile tmp = this.indexFileList.get(this.indexFileList.size() - 1);
                 if (!tmp.isWriteFull()) {
                     indexFile = tmp;
-                }
-                else {
+                } else {
                     lastUpdateEndPhyOffset = tmp.getEndPhyOffset();
                     lastUpdateIndexTimestamp = tmp.getEndTimestamp();
                     prevIndexFile = tmp;
@@ -382,19 +363,13 @@ public class IndexService extends ServiceThread {
         // 如果没找到，使用写锁创建文件
         if (indexFile == null) {
             try {
-                String fileName =
-                        this.storePath + File.separator
-                                + UtilAll.timeMillisToHumanString(System.currentTimeMillis());
-                indexFile =
-                        new IndexFile(fileName, this.hashSlotNum, this.indexNum, lastUpdateEndPhyOffset,
-                            lastUpdateIndexTimestamp);
+                String fileName = this.storePath + File.separator + UtilAll.timeMillisToHumanString(System.currentTimeMillis());
+                indexFile = new IndexFile(fileName, this.hashSlotNum, this.indexNum, lastUpdateEndPhyOffset, lastUpdateIndexTimestamp);
                 this.readWriteLock.writeLock().lock();
                 this.indexFileList.add(indexFile);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log.error("getLastIndexFile exception ", e);
-            }
-            finally {
+            } finally {
                 this.readWriteLock.writeLock().unlock();
             }
 
@@ -418,8 +393,7 @@ public class IndexService extends ServiceThread {
 
 
     public void flush(final IndexFile f) {
-        if (null == f)
-            return;
+        if (null == f) return;
 
         long indexMsgTimestamp = 0;
 

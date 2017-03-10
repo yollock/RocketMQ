@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2010-2013 Alibaba Group Holding Limited
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ import com.alibaba.rocketmq.common.constant.LoggerName;
 
 /**
  * 消费队列实现
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */
@@ -56,12 +56,12 @@ public class ConsumeQueue {
     private volatile long minLogicOffset = 0;
 
 
-    public ConsumeQueue(//
-            final String topic,//
-            final int queueId,//
-            final String storePath,//
-            final int mapedFileSize,//
-            final DefaultMessageStore defaultMessageStore) {
+    public ConsumeQueue(final String topic,//
+                        final int queueId,//
+                        final String storePath,//
+                        final int mapedFileSize,//
+                        final DefaultMessageStore defaultMessageStore //
+    ) {
         this.storePath = storePath;
         this.mapedFileSize = mapedFileSize;
         this.defaultMessageStore = defaultMessageStore;
@@ -91,8 +91,7 @@ public class ConsumeQueue {
         if (!mapedFiles.isEmpty()) {
             // 从倒数第三个文件开始恢复
             int index = mapedFiles.size() - 3;
-            if (index < 0)
-                index = 0;
+            if (index < 0) index = 0;
 
             int mapedFileSizeLogics = this.mapedFileSize;
             MapedFile mapedFile = mapedFiles.get(index);
@@ -110,10 +109,8 @@ public class ConsumeQueue {
                     if (offset >= 0 && size > 0) {
                         mapedFileOffset = i + CQStoreUnitSize;
                         this.maxPhysicOffset = offset;
-                    }
-                    else {
-                        log.info("recover current consume queue file over,  " + mapedFile.getFileName() + " "
-                                + offset + " " + size + " " + tagsCode);
+                    } else {
+                        log.info("recover current consume queue file over,  " + mapedFile.getFileName() + " " + offset + " " + size + " " + tagsCode);
                         break;
                     }
                 }
@@ -123,21 +120,17 @@ public class ConsumeQueue {
                     index++;
                     if (index >= mapedFiles.size()) {
                         // 当前条件分支不可能发生
-                        log.info("recover last consume queue file over, last maped file "
-                                + mapedFile.getFileName());
+                        log.info("recover last consume queue file over, last maped file " + mapedFile.getFileName());
                         break;
-                    }
-                    else {
+                    } else {
                         mapedFile = mapedFiles.get(index);
                         byteBuffer = mapedFile.sliceByteBuffer();
                         processOffset = mapedFile.getFileFromOffset();
                         mapedFileOffset = 0;
                         log.info("recover next consume queue file, " + mapedFile.getFileName());
                     }
-                }
-                else {
-                    log.info("recover current consume queue queue over " + mapedFile.getFileName() + " "
-                            + (processOffset + mapedFileOffset));
+                } else {
+                    log.info("recover current consume queue queue over " + mapedFile.getFileName() + " " + (processOffset + mapedFileOffset));
                     break;
                 }
             }
@@ -158,9 +151,7 @@ public class ConsumeQueue {
             // low:第一个索引信息的起始位置
             // minLogicOffset有设置值则从
             // minLogicOffset-mapedFile.getFileFromOffset()位置开始才是有效值
-            int low =
-                    minLogicOffset > mapedFile.getFileFromOffset() ? (int) (minLogicOffset - mapedFile
-                        .getFileFromOffset()) : 0;
+            int low = minLogicOffset > mapedFile.getFileFromOffset() ? (int) (minLogicOffset - mapedFile.getFileFromOffset()) : 0;
 
             // high:最后一个索引信息的起始位置
             int high = 0;
@@ -180,22 +171,18 @@ public class ConsumeQueue {
                         int size = byteBuffer.getInt();
 
                         // 比较时间, 折半
-                        long storeTime =
-                                this.defaultMessageStore.getCommitLog().pickupStoretimestamp(phyOffset, size);
+                        long storeTime = this.defaultMessageStore.getCommitLog().pickupStoretimestamp(phyOffset, size);
                         if (storeTime < 0) {
                             // 没有从物理文件找到消息，此时直接返回0
                             return 0;
-                        }
-                        else if (storeTime == timestamp) {
+                        } else if (storeTime == timestamp) {
                             targetOffset = midOffset;
                             break;
-                        }
-                        else if (storeTime > timestamp) {
+                        } else if (storeTime > timestamp) {
                             high = midOffset - CQStoreUnitSize;
                             rightOffset = midOffset;
                             rightIndexValue = storeTime;
-                        }
-                        else {
+                        } else {
                             low = midOffset + CQStoreUnitSize;
                             leftOffset = midOffset;
                             leftIndexValue = storeTime;
@@ -205,27 +192,21 @@ public class ConsumeQueue {
                     if (targetOffset != -1) {
                         // 查询的时间正好是消息索引记录写入的时间
                         offset = targetOffset;
-                    }
-                    else {
+                    } else {
                         if (leftIndexValue == -1) {
                             // timestamp 时间小于该MapedFile中第一条记录记录的时间
                             offset = rightOffset;
-                        }
-                        else if (rightIndexValue == -1) {
+                        } else if (rightIndexValue == -1) {
                             // timestamp 时间大于该MapedFile中最后一条记录记录的时间
                             offset = leftOffset;
-                        }
-                        else {
+                        } else {
                             // 取最接近timestamp的offset
-                            offset =
-                                    Math.abs(timestamp - leftIndexValue) > Math.abs(timestamp
-                                            - rightIndexValue) ? rightOffset : leftOffset;
+                            offset = Math.abs(timestamp - leftIndexValue) > Math.abs(timestamp - rightIndexValue) ? rightOffset : leftOffset;
                         }
                     }
 
                     return (mapedFile.getFileFromOffset() + offset) / CQStoreUnitSize;
-                }
-                finally {
+                } finally {
                     sbr.release();
                 }
             }
@@ -264,8 +245,7 @@ public class ConsumeQueue {
                         if (offset >= phyOffet) {
                             this.mapedFileQueue.deleteLastMapedFile();
                             break;
-                        }
-                        else {
+                        } else {
                             int pos = i + CQStoreUnitSize;
                             mapedFile.setWrotePostion(pos);
                             mapedFile.setCommittedPosition(pos);
@@ -290,14 +270,12 @@ public class ConsumeQueue {
                             if (pos == logicFileSize) {
                                 return;
                             }
-                        }
-                        else {
+                        } else {
                             return;
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -317,8 +295,7 @@ public class ConsumeQueue {
         if (mapedFile != null) {
             // 找到写入位置对应的索引项的起始位置
             int position = mapedFile.getWrotePostion() - CQStoreUnitSize;
-            if (position < 0)
-                position = 0;
+            if (position < 0) position = 0;
 
             ByteBuffer byteBuffer = mapedFile.sliceByteBuffer();
             byteBuffer.position(position);
@@ -330,8 +307,7 @@ public class ConsumeQueue {
                 // 说明当前存储单元有效
                 if (offset >= 0 && size > 0) {
                     lastOffset = offset + size;
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -372,16 +348,13 @@ public class ConsumeQueue {
 
                         if (offsetPy >= phyMinOffset) {
                             this.minLogicOffset = result.getMapedFile().getFileFromOffset() + i;
-                            log.info("compute logics min offset: " + this.getMinOffsetInQuque() + ", topic: "
-                                    + this.topic + ", queueId: " + this.queueId);
+                            log.info("compute logics min offset: " + this.getMinOffsetInQuque() + ", topic: " + this.topic + ", queueId: " + this.queueId);
                             break;
                         }
                     }
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
-                }
-                finally {
+                } finally {
                     result.release();
                 }
             }
@@ -394,8 +367,7 @@ public class ConsumeQueue {
     }
 
 
-    public void putMessagePostionInfoWrapper(long offset, int size, long tagsCode, long storeTimestamp,
-            long logicOffset) {
+    public void putMessagePostionInfoWrapper(long offset, int size, long tagsCode, long storeTimestamp, long logicOffset) {
         final int MaxRetries = 5;
         boolean canWrite = this.defaultMessageStore.getRunningFlags().isWriteable();
         for (int i = 0; i < MaxRetries && canWrite; i++) {
@@ -407,13 +379,11 @@ public class ConsumeQueue {
             // 只有一种情况会失败，创建新的MapedFile时报错或者超时
             else {
                 // XXX: warn and notify me
-                log.warn("[BUG]put commit log postion info to " + topic + ":" + queueId + " " + offset
-                        + " failed, retry " + i + " times");
+                log.warn("[BUG]put commit log postion info to " + topic + ":" + queueId + " " + offset + " failed, retry " + i + " times");
 
                 try {
                     Thread.sleep(1000);
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     log.warn("", e);
                 }
             }
@@ -427,17 +397,13 @@ public class ConsumeQueue {
 
     /**
      * 存储一个20字节的信息，putMessagePostionInfo只有一个线程调用，所以不需要加锁
-     * 
-     * @param offset
-     *            消息对应的CommitLog offset
-     * @param size
-     *            消息在CommitLog存储的大小
-     * @param tagsCode
-     *            tags 计算出来的长整数
+     *
+     * @param offset   消息对应的CommitLog offset
+     * @param size     消息在CommitLog存储的大小
+     * @param tagsCode tags 计算出来的长整数
      * @return 是否成功
      */
-    private boolean putMessagePostionInfo(final long offset, final int size, final long tagsCode,
-            final long cqOffset) {
+    private boolean putMessagePostionInfo(final long offset, final int size, final long tagsCode, final long cqOffset) {
         // 在数据恢复时会走到这个流程
         if (offset <= this.maxPhysicOffset) {
             return true;
@@ -457,23 +423,20 @@ public class ConsumeQueue {
             if (mapedFile.isFirstCreateInQueue() && cqOffset != 0 && mapedFile.getWrotePostion() == 0) {
                 this.minLogicOffset = expectLogicOffset;
                 this.fillPreBlank(mapedFile, expectLogicOffset);
-                log.info("fill pre blank space " + mapedFile.getFileName() + " " + expectLogicOffset + " "
-                        + mapedFile.getWrotePostion());
+                log.info("fill pre blank space " + mapedFile.getFileName() + " " + expectLogicOffset + " " + mapedFile.getWrotePostion());
             }
 
             if (cqOffset != 0) {
                 long currentLogicOffset = mapedFile.getWrotePostion() + mapedFile.getFileFromOffset();
                 if (expectLogicOffset != currentLogicOffset) {
                     // XXX: warn and notify me
-                    logError
-                        .warn(
-                            "[BUG]logic queue order maybe wrong, expectLogicOffset: {} currentLogicOffset: {} Topic: {} QID: {} Diff: {}",//
+                    logError.warn("[BUG]logic queue order maybe wrong, expectLogicOffset: {} currentLogicOffset: {} Topic: {} QID: {} Diff: {}",//
                             expectLogicOffset, //
                             currentLogicOffset,//
                             this.topic,//
                             this.queueId,//
                             expectLogicOffset - currentLogicOffset//
-                        );
+                    );
                 }
             }
 
@@ -501,9 +464,8 @@ public class ConsumeQueue {
 
     /**
      * 返回Index Buffer
-     * 
-     * @param startIndex
-     *            起始偏移量索引
+     *
+     * @param startIndex 起始偏移量索引
      */
     public SelectMapedBufferResult getIndexBuffer(final long startIndex) {
         int mapedFileSize = this.mapedFileSize;

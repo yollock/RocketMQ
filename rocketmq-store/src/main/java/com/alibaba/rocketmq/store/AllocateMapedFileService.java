@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2010-2013 Alibaba Group Holding Limited
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,17 +31,15 @@ import com.alibaba.rocketmq.common.constant.LoggerName;
 
 /**
  * Create MapedFile in advance
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */
 public class AllocateMapedFileService extends ServiceThread {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.StoreLoggerName);
     private static int WaitTimeOut = 1000 * 5;
-    private ConcurrentHashMap<String, AllocateRequest> requestTable =
-            new ConcurrentHashMap<String, AllocateRequest>();
-    private PriorityBlockingQueue<AllocateRequest> requestQueue =
-            new PriorityBlockingQueue<AllocateRequest>();
+    private ConcurrentHashMap<String, AllocateRequest> requestTable = new ConcurrentHashMap<String, AllocateRequest>();
+    private PriorityBlockingQueue<AllocateRequest> requestQueue = new PriorityBlockingQueue<AllocateRequest>();
     private volatile boolean hasException = false;
 
 
@@ -79,12 +77,10 @@ public class AllocateMapedFileService extends ServiceThread {
                 }
                 this.requestTable.remove(nextFilePath);
                 return result.getMapedFile();
-            }
-            else {
+            } else {
                 log.error("find preallocate mmap failed, this never happen");
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             log.warn(this.getServiceName() + " service has exception. ", e);
         }
 
@@ -104,8 +100,7 @@ public class AllocateMapedFileService extends ServiceThread {
 
         try {
             this.thread.join(this.getJointime());
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
@@ -121,8 +116,7 @@ public class AllocateMapedFileService extends ServiceThread {
     public void run() {
         log.info(this.getServiceName() + " service started");
 
-        while (!this.isStoped() && this.mmapOperation())
-            ;
+        while (!this.isStoped() && this.mmapOperation()) ;
 
         log.info(this.getServiceName() + " service end");
     }
@@ -136,8 +130,7 @@ public class AllocateMapedFileService extends ServiceThread {
         try {
             req = this.requestQueue.take();
             if (null == this.requestTable.get(req.getFilePath())) {
-                log.warn("this mmap request expired, maybe cause timeout " + req.getFilePath() + " "
-                        + req.getFileSize());
+                log.warn("this mmap request expired, maybe cause timeout " + req.getFilePath() + " " + req.getFileSize());
                 return true;
             }
 
@@ -147,26 +140,21 @@ public class AllocateMapedFileService extends ServiceThread {
                 long eclipseTime = UtilAll.computeEclipseTimeMilliseconds(beginTime);
                 if (eclipseTime > 10) {
                     int queueSize = this.requestQueue.size();
-                    log.warn("create mapedFile spent time(ms) " + eclipseTime + " queue size " + queueSize
-                            + " " + req.getFilePath() + " " + req.getFileSize());
+                    log.warn("create mapedFile spent time(ms) " + eclipseTime + " queue size " + queueSize + " " + req.getFilePath() + " " + req.getFileSize());
                 }
 
                 req.setMapedFile(mapedFile);
                 this.hasException = false;
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             log.warn(this.getServiceName() + " service has exception, maybe by shutdown");
             this.hasException = true;
             return false;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             log.warn(this.getServiceName() + " service has exception. ", e);
             this.hasException = true;
-        }
-        finally {
-            if (req != null)
-                req.getCountDownLatch().countDown();
+        } finally {
+            if (req != null) req.getCountDownLatch().countDown();
         }
         return true;
     }

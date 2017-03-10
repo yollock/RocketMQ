@@ -28,15 +28,20 @@ public class Producer {
     public static void main(String[] args) throws MQClientException, InterruptedException {
         DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
 
+
+        producer.setNamesrvAddr("localhost:9876"); // todo 待删除
+
         producer.start();
 
         for (int i = 0; i < 1000; i++) {
             try {
-                Message msg = new Message("TopicTest",// topic
+                Message msg = new Message("TopicTest_yollock",// topic
                         "TagA",// tag
-                        ("Hello RocketMQ " + i).getBytes()// body
+                        ("Hello Yollock " + i).getBytes()// body
                 );
-                SendResult sendResult = producer.send(msg);
+
+                // 设置最大超时时间,方便debug
+                SendResult sendResult = producer.send(msg, Integer.MAX_VALUE);
                 System.out.println(sendResult);
             } catch (Exception e) {
                 e.printStackTrace();
