@@ -39,6 +39,7 @@ public class Producer {
                         "TagA",// tag
                         ("Hello Yollock " + i).getBytes()// body
                 );
+//                msg.setKeys("");
 
                 // 设置最大超时时间,方便debug
                 SendResult sendResult = producer.send(msg, Integer.MAX_VALUE);

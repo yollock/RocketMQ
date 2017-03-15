@@ -40,8 +40,8 @@ public class IndexFile {
     private static int HASH_SLOT_SIZE = 4;
     private static int INDEX_SIZE = 20;
     private static int INVALID_INDEX = 0;
-    private final int hashSlotNum;
-    private final int indexNum;
+    private final int hashSlotNum; // 默认500W
+    private final int indexNum; // 默认2000W
     private final MapedFile mapedFile;
     private final FileChannel fileChannel;
     private final MappedByteBuffer mappedByteBuffer;
@@ -118,11 +118,12 @@ public class IndexFile {
 
             try {
                 // TODO 是否是读写锁
-                // fileLock = this.fileChannel.lock(absSlotPos, HASH_SLOT_SIZE,
-                // false);
+                // fileLock = this.fileChannel.lock(absSlotPos, HASH_SLOT_SIZE, false);
+                // slotValue = 索引个数, 这个数值指的是处理完上一个消息后的索引个数, 但并没有加上此时处理的消息
+                // 因为索引的开始位置是0
                 int slotValue = this.mappedByteBuffer.getInt(absSlotPos);
                 if (slotValue <= INVALID_INDEX || slotValue > this.indexHeader.getIndexCount()) {
-                    slotValue = INVALID_INDEX;
+                    slotValue = INVALID_INDEX; // 0
                 }
 
                 long timeDiff = storeTimestamp - this.indexHeader.getBeginTimestamp();
@@ -139,6 +140,7 @@ public class IndexFile {
                     timeDiff = 0;
                 }
 
+                // 索引的绝度物理偏移量, 根据indexCount递增
                 int absIndexPos = IndexHeader.INDEX_HEADER_SIZE + this.hashSlotNum * HASH_SLOT_SIZE + this.indexHeader.getIndexCount() * INDEX_SIZE;
 
                 // 写入真正索引
@@ -148,6 +150,8 @@ public class IndexFile {
                 this.mappedByteBuffer.putInt(absIndexPos + 4 + 8 + 4, slotValue);
 
                 // 更新哈希槽
+                // 这个值很重要, 根据它, 可以将Message Key的hashcode一样的消息,串成一个链条
+                // 根据这个值,可以找到此hashcode下的链表,最新的一个消息索引的物理位置
                 this.mappedByteBuffer.putInt(absSlotPos, this.indexHeader.getIndexCount());
 
                 // 第一次写入
@@ -157,7 +161,7 @@ public class IndexFile {
                 }
 
                 this.indexHeader.incHashSlotCount();
-                this.indexHeader.incIndexCount();
+                this.indexHeader.incIndexCount(); // 写入索引槽的值和索引内存,才更新数量 + 1
                 this.indexHeader.setEndPhyOffset(phyOffset);
                 this.indexHeader.setEndTimestamp(storeTimestamp);
 
@@ -224,7 +228,8 @@ public class IndexFile {
     public void selectPhyOffset(final List<Long> phyOffsets, final String key, final int maxNum, final long begin, final long end, boolean lock) {
         if (this.mapedFile.hold()) {
             int keyHash = indexKeyHashMethod(key);
-            int slotPos = keyHash % this.hashSlotNum;
+            int slotPos = keyHash % this.hashSlotNum; // 获取槽位的position
+            // 每个slot是4位的int类型数据
             int absSlotPos = IndexHeader.INDEX_HEADER_SIZE + slotPos * HASH_SLOT_SIZE;
 
             FileLock fileLock = null;
@@ -234,6 +239,8 @@ public class IndexFile {
                     // HASH_SLOT_SIZE, true);
                 }
 
+                // Slot存储的值为存储当前消息之前的索引个数,因为索引偏移量从0开始
+                // 根据次值,可以获取此hashcode下的链表,最新索引的物理偏移量
                 int slotValue = this.mappedByteBuffer.getInt(absSlotPos);
                 // if (fileLock != null) {
                 // fileLock.release();
@@ -250,6 +257,11 @@ public class IndexFile {
 
                         int absIndexPos = IndexHeader.INDEX_HEADER_SIZE + this.hashSlotNum * HASH_SLOT_SIZE + nextIndexToRead * INDEX_SIZE;
 
+                        // 每个索引为20个字节
+                        // 4 key hash
+                        // 8 commit log offset
+                        // 4 timestamp
+                        // 4 next index offset
                         int keyHashRead = this.mappedByteBuffer.getInt(absIndexPos);
                         long phyOffsetRead = this.mappedByteBuffer.getLong(absIndexPos + 4);
                         // int转为long，避免下面计算时间差值时溢出

@@ -831,6 +831,7 @@ public class DefaultMessageStore implements MessageStore {
                         lastQueryMsgTime = msg.getStoreTimestamp();
                     }
 
+                    // 获取消息在properties存储的
                     String[] keyArray = msg.getKeys().split(MessageConst.KEY_SEPARATOR);
                     if (topic.equals(msg.getTopic())) {
                         for (String k : keyArray) {
