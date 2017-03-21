@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2010-2013 Alibaba Group Holding Limited
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,8 +26,8 @@ import com.alibaba.rocketmq.common.message.MessageExt;
  * 未决事务，服务器回查客户端
  */
 public class TransactionCheckListenerImpl implements TransactionCheckListener {
-    private AtomicInteger transactionIndex = new AtomicInteger(0);
 
+    private AtomicInteger transactionIndex = new AtomicInteger(0);
 
     @Override
     public LocalTransactionState checkLocalTransactionState(MessageExt msg) {
@@ -36,11 +36,9 @@ public class TransactionCheckListenerImpl implements TransactionCheckListener {
         int value = transactionIndex.getAndIncrement();
         if ((value % 6) == 0) {
             throw new RuntimeException("Could not find db");
-        }
-        else if ((value % 5) == 0) {
+        } else if ((value % 5) == 0) {
             return LocalTransactionState.ROLLBACK_MESSAGE;
-        }
-        else if ((value % 4) == 0) {
+        } else if ((value % 4) == 0) {
             return LocalTransactionState.COMMIT_MESSAGE;
         }
 

@@ -506,7 +506,9 @@ public class CommitLog {
                 log.error("create maped file1 error, topic: " + msg.getTopic() + " clientAddr: " + msg.getBornHostString());
                 return new PutMessageResult(PutMessageStatus.CREATE_MAPEDFILE_FAILED, null);
             }
+
             result = mapedFile.appendMessage(msg, this.appendMessageCallback);
+
             switch (result.getStatus()) {
                 case PUT_OK:
                     break;
@@ -932,8 +934,7 @@ public class CommitLog {
             // Transaction messages that require special handling
             final int tranType = MessageSysFlag.getTransactionValue(msgInner.getSysFlag());
             switch (tranType) {
-                // Prepared and Rollback message is not consumed, will not enter the
-                // consumer queue
+                // Prepared and Rollback message is not consumed, will not enter the consumer queue
                 case MessageSysFlag.TransactionPreparedType:
                 case MessageSysFlag.TransactionRollbackType:
                     queueOffset = 0L;

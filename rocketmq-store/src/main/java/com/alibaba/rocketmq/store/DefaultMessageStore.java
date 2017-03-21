@@ -406,7 +406,9 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         long beginTime = this.getSystemClock().now();
+
         PutMessageResult result = this.commitLog.putMessage(msg);
+
         // 性能数据统计
         long eclipseTime = this.getSystemClock().now() - beginTime;
         if (eclipseTime > 1000) {
