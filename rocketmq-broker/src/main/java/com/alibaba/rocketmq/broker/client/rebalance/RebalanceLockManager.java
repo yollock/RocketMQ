@@ -120,9 +120,7 @@ public class RebalanceLockManager {
                         lockEntry.setClientId(clientId);
                         groupValue.put(mq, lockEntry);
                         log.info("tryLock, message queue not locked, I got it. Group: {} NewClientId: {} {}", //
-                                group, //
-                                clientId, //
-                                mq);
+                                group, clientId, mq);
                     }
 
                     if (lockEntry.isLocked(clientId)) {
@@ -137,19 +135,13 @@ public class RebalanceLockManager {
                         lockEntry.setClientId(clientId);
                         lockEntry.setLastUpdateTimestamp(System.currentTimeMillis());
                         log.warn("tryLock, message queue lock expired, I got it. Group: {} OldClientId: {} NewClientId: {} {}", //
-                                group, //
-                                oldClientId, //
-                                clientId, //
-                                mq);
+                                group, oldClientId, clientId, mq);
                         return true;
                     }
 
                     // 锁被别的Client占用
                     log.warn("tryLock, message queue locked by other client. Group: {} OtherClientId: {} NewClientId: {} {}", //
-                            group, //
-                            oldClientId, //
-                            clientId, //
-                            mq);
+                            group, oldClientId, clientId, mq);
                     return false;
                 } finally {
                     this.lock.unlock();
@@ -203,9 +195,7 @@ public class RebalanceLockManager {
                             lockEntry.setClientId(clientId);
                             groupValue.put(mq, lockEntry);
                             log.info("tryLockBatch, message queue not locked, I got it. Group: {} NewClientId: {} {}", //
-                                    group, //
-                                    clientId, //
-                                    mq);
+                                    group, clientId, mq);
                         }
 
                         // 已经锁定
@@ -222,20 +212,14 @@ public class RebalanceLockManager {
                             lockEntry.setClientId(clientId);
                             lockEntry.setLastUpdateTimestamp(System.currentTimeMillis());
                             log.warn("tryLockBatch, message queue lock expired, I got it. Group: {} OldClientId: {} NewClientId: {} {}", //
-                                    group, //
-                                    oldClientId, //
-                                    clientId, //
-                                    mq);
+                                    group, oldClientId, clientId, mq);
                             lockedMqs.add(mq);
                             continue;
                         }
 
                         // 锁被别的Client占用
                         log.warn("tryLockBatch, message queue locked by other client. Group: {} OtherClientId: {} NewClientId: {} {}", //
-                                group, //
-                                oldClientId, //
-                                clientId, //
-                                mq);
+                                group, oldClientId, clientId, mq);
                     }
                 } finally {
                     this.lock.unlock();
@@ -261,27 +245,19 @@ public class RebalanceLockManager {
                             if (lockEntry.getClientId().equals(clientId)) {
                                 groupValue.remove(mq);
                                 log.info("unlockBatch, Group: {} {} {}",//
-                                        group, //
-                                        mq, //
-                                        clientId);
+                                        group, mq, clientId);
                             } else {
                                 log.warn("unlockBatch, but mq locked by other client: {}, Group: {} {} {}",//
-                                        lockEntry.getClientId(), //
-                                        group, //
-                                        mq, //
-                                        clientId);
+                                        lockEntry.getClientId(), group, mq, clientId);
                             }
                         } else {
                             log.warn("unlockBatch, but mq not locked, Group: {} {} {}",//
-                                    group, //
-                                    mq, //
-                                    clientId);
+                                    group, mq, clientId);
                         }
                     }
                 } else {
                     log.warn("unlockBatch, group not exist, Group: {} {}",//
-                            group, //
-                            clientId);
+                            group, clientId);
                 }
             } finally {
                 this.lock.unlock();

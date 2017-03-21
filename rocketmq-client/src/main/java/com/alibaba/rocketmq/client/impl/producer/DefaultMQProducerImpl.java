@@ -443,7 +443,8 @@ public class DefaultMQProducerImpl implements MQProducerInner {
 
     private SendResult sendDefaultImpl(Message msg,//
                                        final CommunicationMode communicationMode,//
-                                       final SendCallback sendCallback, final long timeout//
+                                       final SendCallback sendCallback, //
+                                       final long timeout//
     ) throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
         this.makeSureStateOK();
         Validators.checkMessage(msg, this.defaultMQProducer);
@@ -451,7 +452,9 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         final long maxTimeout = this.defaultMQProducer.getSendMsgTimeout() + 1000;
         final long beginTimestamp = System.currentTimeMillis();
         long endTimestamp = beginTimestamp;
+
         TopicPublishInfo topicPublishInfo = this.tryToFindTopicPublishInfo(msg.getTopic());
+
         if (topicPublishInfo != null && topicPublishInfo.ok()) {
             MessageQueue mq = null;
             Exception exception = null;
@@ -461,12 +464,16 @@ public class DefaultMQProducerImpl implements MQProducerInner {
             String[] brokersSent = new String[timesTotal];
             for (; times < timesTotal && (endTimestamp - beginTimestamp) < maxTimeout; times++) {
                 String lastBrokerName = null == mq ? null : mq.getBrokerName();
+
                 MessageQueue tmpmq = topicPublishInfo.selectOneMessageQueue(lastBrokerName);
+
                 if (tmpmq != null) {
                     mq = tmpmq;
                     brokersSent[times] = mq.getBrokerName();
                     try {
+
                         sendResult = this.sendKernelImpl(msg, mq, communicationMode, sendCallback, timeout);
+
                         endTimestamp = System.currentTimeMillis();
                         switch (communicationMode) {
                             case ASYNC:

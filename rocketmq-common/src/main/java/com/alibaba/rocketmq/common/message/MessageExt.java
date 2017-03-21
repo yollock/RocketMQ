@@ -59,10 +59,8 @@ public class MessageExt extends Message {
 
     private long preparedTransactionOffset;
 
-
     public MessageExt() {
     }
-
 
     public MessageExt(int queueId, long bornTimestamp, SocketAddress bornHost, long storeTimestamp, SocketAddress storeHost, String msgId) {
         this.queueId = queueId;
@@ -72,7 +70,6 @@ public class MessageExt extends Message {
         this.storeHost = storeHost;
         this.msgId = msgId;
     }
-
 
     /**
      * SocketAddress ----> ByteBuffer 转化成8个字节
@@ -86,14 +83,12 @@ public class MessageExt extends Message {
         return byteBuffer;
     }
 
-
     /**
      * 获取bornHost字节形式，8个字节 HOST + PORT
      */
     public ByteBuffer getBornHostBytes() {
         return SocketAddress2ByteBuffer(this.bornHost);
     }
-
 
     /**
      * 获取storehost字节形式，8个字节 HOST + PORT
